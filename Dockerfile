@@ -3,6 +3,11 @@ FROM python:3.11-slim
 # Set working directory
 WORKDIR /app
 
+# Install system dependencies including espeak-ng
+RUN apt-get update && apt-get install -y \
+    espeak-ng \
+    && rm -rf /var/lib/apt/lists/*
+
 # Copy requirements first for better caching
 COPY requirements.txt .
 
