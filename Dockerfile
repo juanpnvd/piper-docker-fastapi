@@ -27,6 +27,9 @@ COPY requirements.txt .
 # Install dependencies
 RUN pip install --no-cache-dir -r requirements.txt
 
+RUN pip install --no-cache-dir --no-binary piper-tts piper-tts
+
+
 # Download NLTK data during build
 RUN python -m nltk.downloader punkt punkt_tab
 
