@@ -4,3 +4,4 @@ piper-tts
 scipy
 nltk
 numpy
+pydub

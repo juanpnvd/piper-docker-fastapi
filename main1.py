@@ -7,6 +7,8 @@ from fastapi import FastAPI, HTTPException, Response
 from pydantic import BaseModel, Field
 from contextlib import asynccontextmanager
 import asyncio
+from pydub import AudioSegment
+
 
 # --- CONFIGURATION ---
 VOICE_MODEL = "/app/models/es_AR-elena-medium.onnx"
@@ -150,7 +152,13 @@ async def synthesize_text(text: str) -> bytes:
     scipy.io.wavfile.write(wav_buffer, voice.config.sample_rate, final_audio_int16)
     wav_buffer.seek(0)
     
-    return wav_buffer.read()
+    # Convert to OGG with OPUS codec
+    audio = AudioSegment.from_wav(wav_buffer)
+    ogg_buffer = io.BytesIO()
+    audio.export(ogg_buffer, format="ogg", codec="libopus", bitrate="64k", parameters=["-ac", "1"])  # -ac 1 = mono
+    ogg_buffer.seek(0)
+
+    return ogg_buffer.read()
 
 @app.get(
     "/health", 
@@ -242,9 +250,9 @@ async def synthesize(request: TextRequest):
         
         return Response(
             content=wav_bytes,
-            media_type="audio/wav",
+            media_type="audio/ogg; codecs=opus",
             headers={
-                "Content-Disposition": "attachment; filename=speech.wav"
+                "Content-Disposition": "attachment; filename=speech.ogg"
             }
         )
     
