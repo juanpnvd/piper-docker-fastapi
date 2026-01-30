@@ -23,8 +23,15 @@ ENV LD_LIBRARY_PATH=/usr/lib/aarch64-linux-gnu:$LD_LIBRARY_PATH
 COPY requirements.txt .
 
 # Install dependencies
-# On ARM64, piper-tts will compile from source and needs the build tools above
-RUN pip install --no-cache-dir -r requirements.txt
+# CRITICAL: Force piper-tts compilation from source (don't use potentially broken wheel)
+RUN echo "=== Installing other dependencies with wheels ===" && \
+    pip install --no-cache-dir fastapi uvicorn scipy nltk numpy && \
+    echo "=== Compiling piper-tts from source (this takes 8-12 min on ARM64) ===" && \
+    pip install --no-cache-dir --no-binary piper-tts piper-tts && \
+    echo "=== Verifying espeakbridge compiled correctly ===" && \
+    python -c "from piper import espeakbridge; print('✓ espeakbridge loaded')" && \
+    python -c "from piper.voice import PiperVoice; print('✓ PiperVoice loaded')" && \
+    echo "=== SUCCESS: piper-tts installed and verified ==="
 
 # Download NLTK data during build
 RUN python -m nltk.downloader punkt punkt_tab

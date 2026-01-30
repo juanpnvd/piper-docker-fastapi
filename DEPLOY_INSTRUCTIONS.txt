@@ -1,0 +1,92 @@
+═══════════════════════════════════════════════════════════════════
+  INSTRUCCIONES DE DEPLOY PARA DOKPLOY (ARM64)
+═══════════════════════════════════════════════════════════════════
+
+PROBLEMA RESUELTO:
+------------------
+El error "ModuleNotFoundError: No module named 'espeakbridge'" ocurría
+porque faltaban las herramientas de compilación (cmake, ninja, python3-dev)
+necesarias para compilar el módulo C espeakbridge en ARM64.
+
+CAMBIOS REALIZADOS:
+-------------------
+1. Dockerfile actualizado con:
+   - build-essential, cmake, ninja-build, git
+   - python3-dev (CRÍTICO para compilar extensiones C)
+   - Verificación automática post-instalación
+
+2. .dockerignore actualizado para excluir piper1-gpl/
+
+PASOS PARA DEPLOY EN DOKPLOY:
+==============================
+
+1. COMMIT Y PUSH DE LOS CAMBIOS
+   -------------------------------
+   git add Dockerfile .dockerignore requirements.txt verify.sh
+   git commit -m "Fix: Add build tools for ARM64 espeakbridge compilation"
+   git push
+
+2. LIMPIAR CACHE EN DOKPLOY
+   -------------------------
+   En la interfaz de Dokploy:
+   - Ve a tu aplicación
+   - Busca opciones de "Clean Build" o "Clear Cache"
+   - Actívala
+
+3. TRIGGER REBUILD
+   ---------------
+   - Click en "Rebuild" o "Redeploy"
+   - NO necesitas especificar --platform linux/arm64
+   - Dokploy automáticamente construye para ARM64
+
+4. MONITOREAR LOGS (IMPORTANTE)
+   ----------------------------
+   Durante el build, debes ver:
+
+   ✓ Instalación de cmake, ninja-build, git
+   ✓ pip install piper-tts (tardará 8-12 minutos si compila)
+   ✓ "=== Verifying piper-tts installation ==="
+   ✓ "✓ espeakbridge module loaded successfully"
+   ✓ "✓ PiperVoice class imported successfully"
+
+   Si ves estos mensajes, el build fue exitoso.
+
+5. VERIFICACIÓN POST-DEPLOY
+   ------------------------
+   Una vez que el container esté corriendo:
+
+   docker exec <container_name> bash /app/verify.sh
+
+   Esto ejecutará pruebas completas del sistema.
+
+TIEMPOS ESPERADOS:
+==================
+- Instalación de dependencias del sistema: ~2 min
+- Instalación de piper-tts en ARM64: ~8-12 min (compila desde source)
+- Setup final (NLTK, modelo): ~1 min
+- TOTAL: ~11-15 minutos
+
+SI AÚN FALLA:
+=============
+Revisa los logs de build en Dokploy y busca:
+
+❌ ERROR COMÚN: "Could not build wheels for piper-tts"
+   SOLUCIÓN: Verifica que el Dockerfile tiene python3-dev
+
+❌ ERROR COMÚN: "cmake: not found" o "ninja: not found"
+   SOLUCIÓN: Verifica que el Dockerfile instaló cmake y ninja-build
+
+❌ ERROR COMÚN: Build muy rápido (<5 min)
+   SOLUCIÓN: Docker está usando cache. Fuerza "Clean Build"
+
+❌ ERROR COMÚN: "Python.h: No such file"
+   SOLUCIÓN: Falta python3-dev en el Dockerfile
+
+CONTACTO SI PERSISTE EL ERROR:
+==============================
+Si después de estos pasos sigue fallando, envía:
+1. Logs completos del build de Dokploy
+2. Output de: docker exec <container> python -c "import sys; print(sys.version)"
+3. Output de: docker exec <container> uname -m
+
+═══════════════════════════════════════════════════════════════════
