@@ -3,10 +3,15 @@ FROM python:3.11-slim
 # Set working directory
 WORKDIR /app
 
-# Install system dependencies including espeak-ng
+# Install system dependencies including espeak-ng and development libraries
 RUN apt-get update && apt-get install -y \
     espeak-ng \
+    libespeak-ng1 \
+    libespeak-ng-dev \
     && rm -rf /var/lib/apt/lists/*
+
+# Set library path
+ENV LD_LIBRARY_PATH=/usr/lib/x86_64-linux-gnu:$LD_LIBRARY_PATH
 
 # Copy requirements first for better caching
 COPY requirements.txt .
