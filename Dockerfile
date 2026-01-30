@@ -19,22 +19,24 @@ RUN apt-get update && apt-get install -y \
 
 ENV LD_LIBRARY_PATH=/usr/lib/aarch64-linux-gnu:$LD_LIBRARY_PATH
 
-# Copy requirements first for better caching
-COPY requirements.txt .
+# Install build dependencies first
+RUN pip install --no-cache-dir setuptools wheel scikit-build
 
-# Install dependencies
-# CRITICAL: Install scikit-build first, then compile piper-tts from source
-RUN echo "=== Installing build dependencies ===" && \
-    pip install --no-cache-dir setuptools wheel scikit-build && \
-    echo "=== Installing other dependencies with wheels ===" && \
-    pip install --no-cache-dir fastapi uvicorn scipy nltk numpy && \
-    echo "=== Compiling piper-tts from source (this takes 8-12 min on ARM64) ===" && \
-    pip install --no-cache-dir --no-binary piper-tts --verbose piper-tts 2>&1 | tee /tmp/piper-build.log && \
+# Install other Python dependencies
+RUN pip install --no-cache-dir fastapi uvicorn scipy nltk numpy onnxruntime
+
+# Clone and compile piper-tts from source (includes CMakeLists.txt)
+# This is necessary because PyPI tarball doesn't include build files
+RUN echo "=== Cloning piper-tts from GitHub ===" && \
+    git clone --depth 1 https://github.com/OHF-Voice/piper1-gpl.git /tmp/piper && \
+    cd /tmp/piper && \
+    echo "=== Compiling piper-tts with espeakbridge (8-12 min on ARM64) ===" && \
+    pip install --no-cache-dir --verbose . && \
     echo "=== Verifying espeakbridge compiled correctly ===" && \
-    python -c "from piper import espeakbridge; print('✓ espeakbridge loaded')" || \
-    (echo "FAILED - Showing build log:" && tail -100 /tmp/piper-build.log && exit 1) && \
+    python -c "from piper import espeakbridge; print('✓ espeakbridge loaded')" && \
     python -c "from piper.voice import PiperVoice; print('✓ PiperVoice loaded')" && \
-    echo "=== SUCCESS: piper-tts installed and verified ==="
+    cd / && rm -rf /tmp/piper && \
+    echo "=== SUCCESS: piper-tts compiled and verified ==="
 
 # Download NLTK data during build
 RUN python -m nltk.downloader punkt punkt_tab
