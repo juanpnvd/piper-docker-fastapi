@@ -16,3 +16,6 @@ build
 .vscode
 .idea
 *.md
+piper1-gpl/
+test_api.ps1
+!verify.sh
