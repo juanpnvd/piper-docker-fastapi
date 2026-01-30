@@ -3,14 +3,22 @@ FROM python:3.11-slim
 # Set working directory
 WORKDIR /app
 
-# Install system dependencies including espeak-ng and development libraries
+# Prevent debconf warnings
+ENV DEBIAN_FRONTEND=noninteractive
+
+# Install build dependencies and runtime libraries
 RUN apt-get update && apt-get install -y \
+    build-essential \
+    cmake \
+    pkg-config \
     espeak-ng \
     libespeak-ng1 \
     libespeak-ng-dev \
+    libsndfile1 \
+    libsndfile1-dev \
     && rm -rf /var/lib/apt/lists/*
 
-# Set library path
+# Set library path for espeak-ng
 ENV LD_LIBRARY_PATH=/usr/lib/x86_64-linux-gnu:$LD_LIBRARY_PATH
 
 # Copy requirements first for better caching
