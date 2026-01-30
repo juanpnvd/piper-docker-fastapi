@@ -23,13 +23,16 @@ ENV LD_LIBRARY_PATH=/usr/lib/aarch64-linux-gnu:$LD_LIBRARY_PATH
 COPY requirements.txt .
 
 # Install dependencies
-# CRITICAL: Force piper-tts compilation from source (don't use potentially broken wheel)
-RUN echo "=== Installing other dependencies with wheels ===" && \
+# CRITICAL: Install scikit-build first, then compile piper-tts from source
+RUN echo "=== Installing build dependencies ===" && \
+    pip install --no-cache-dir setuptools wheel scikit-build && \
+    echo "=== Installing other dependencies with wheels ===" && \
     pip install --no-cache-dir fastapi uvicorn scipy nltk numpy && \
     echo "=== Compiling piper-tts from source (this takes 8-12 min on ARM64) ===" && \
-    pip install --no-cache-dir --no-binary piper-tts piper-tts && \
+    pip install --no-cache-dir --no-binary piper-tts --verbose piper-tts 2>&1 | tee /tmp/piper-build.log && \
     echo "=== Verifying espeakbridge compiled correctly ===" && \
-    python -c "from piper import espeakbridge; print('✓ espeakbridge loaded')" && \
+    python -c "from piper import espeakbridge; print('✓ espeakbridge loaded')" || \
+    (echo "FAILED - Showing build log:" && tail -100 /tmp/piper-build.log && exit 1) && \
     python -c "from piper.voice import PiperVoice; print('✓ PiperVoice loaded')" && \
     echo "=== SUCCESS: piper-tts installed and verified ==="
 
