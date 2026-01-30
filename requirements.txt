@@ -1,0 +1,6 @@
+﻿fastapi
+uvicorn[standard]
+piper-tts
+scipy
+nltk
+numpy
