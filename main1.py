@@ -1,7 +1,7 @@
 import io
 import numpy as np
 import scipy.io.wavfile
-from piper.voice import PiperVoice, SynthesisConfig
+from piper import PiperVoice, SynthesisConfig
 import nltk
 from fastapi import FastAPI, HTTPException, Response
 from pydantic import BaseModel, Field
