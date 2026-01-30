@@ -15,6 +15,7 @@ RUN apt-get update && apt-get install -y \
     libespeak-ng1 \
     libespeak-ng-dev \
     libsndfile1 \
+    ffmpeg \
     && rm -rf /var/lib/apt/lists/*
 
 ENV LD_LIBRARY_PATH=/usr/lib/aarch64-linux-gnu:$LD_LIBRARY_PATH
