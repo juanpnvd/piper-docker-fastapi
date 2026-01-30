@@ -24,7 +24,7 @@ ENV LD_LIBRARY_PATH=/usr/lib/aarch64-linux-gnu:$LD_LIBRARY_PATH
 RUN pip install --no-cache-dir setuptools wheel scikit-build
 
 # Install other Python dependencies
-RUN pip install --no-cache-dir fastapi uvicorn scipy nltk numpy onnxruntime
+RUN pip install --no-cache-dir fastapi uvicorn scipy nltk numpy onnxruntime pydub
 
 # Clone and compile piper-tts from source (includes CMakeLists.txt)
 # This is necessary because PyPI tarball doesn't include build files
