@@ -155,7 +155,7 @@ async def synthesize_text(text: str) -> bytes:
     # Convert to OGG with OPUS codec
     audio = AudioSegment.from_wav(wav_buffer)
     ogg_buffer = io.BytesIO()
-    audio.export(ogg_buffer, format="ogg", codec="libopus", bitrate="64k", parameters=["-ac", "1"])  # -ac 1 = mono
+    audio.export(ogg_buffer, format="ogg", codec="libopus", bitrate="32k", parameters=["-ac", "1"])  # -ac 1 = mono
     ogg_buffer.seek(0)
 
     return ogg_buffer.read()
